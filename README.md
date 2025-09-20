@@ -1,39 +1,83 @@
 # Focal Loss for Dense Object Detection – Implementation
 
 ## 🎥 Presentation Videos (Persian)
-- [Video Presentation of the Paper (in Persian)]([your-paper-video-link-here](https://drive.google.com/file/d/16kOf-uzZvi2_cymJs5GuorxXMTedl5zZ/view))  
-- [Video Presentation of the Implementation/Code (in Persian)]([your-code-video-link-here](https://drive.google.com/file/d/13SMjwUFaWaVpJg_r1CFTHL1cmngxuAPg/view))  
+
+▶️ **Paper Presentation (in Persian):** [Watch here](https://drive.google.com/file/d/16kOf-uzZvi2_cymJs5GuorxXMTedl5zZ/view)  
+
+▶️ **Code Presentation (in Persian):** [Watch here](https://drive.google.com/file/d/13SMjwUFaWaVpJg_r1CFTHL1cmngxuAPg/view)  
 
 ---
 
-## 📖 Introduction
-This repository presents an implementation of the **Focal Loss for Dense Object Detection** paper by *Tsung-Yi Lin, Priya Goyal, Ross Girshick, Kaiming He, and Piotr Dollár (FAIR, 2017)*.  
-The paper introduces **Focal Loss**, a novel loss function designed to address the extreme foreground-background class imbalance in dense object detection. The method is applied to the **RetinaNet** architecture, which achieves state-of-the-art accuracy on challenging benchmarks such as **COCO**, while maintaining efficiency.
+## Abstract  
+Dense object detection presents unique challenges due to the extreme imbalance between foreground and background classes. The seminal paper **“Focal Loss for Dense Object Detection”** (Lin et al., FAIR 2017) introduced the **Focal Loss** function, designed to address this imbalance by down-weighting easy negatives and focusing training on hard examples. The authors proposed the **RetinaNet** architecture, which achieved state-of-the-art results on COCO while maintaining a one-stage detector’s efficiency.  
 
-## 🧑‍💻 My Work
-In this project, I studied the paper and implemented the proposed method using **PyTorch** and the **COCO 2017 dataset**.  
-I implemented:
-- A **custom Focal Loss** class in PyTorch.  
-- A RetinaNet-inspired architecture with a **ResNet backbone** and **Feature Pyramid Network (FPN)**.  
-- Training and evaluation loops with COCO dataset integration.  
+In this report, I study the focal loss mechanism, reproduce its theoretical insights, and implement a RetinaNet-based object detection pipeline on the COCO dataset. My implementation integrates a custom **Focal Loss module**, a **Feature Pyramid Network (FPN)** backbone, and training/evaluation routines using PyTorch.
 
-Although the code is complete, due to **server unavailability** and the **computationally expensive training process**, I was unable to fully run the model on my personal laptop. Nevertheless, the pipeline is implemented and ready for execution in a GPU-enabled environment.
-
-## 📂 Dataset
-The project uses the **COCO 2017 dataset**:  
-- Training images: `train2017` (118k images)  
-- Validation images: `val2017` (5k images)  
-- Annotations: `instances_train2017.json`, `instances_val2017.json`  
-
-## 🛠️ Implementation
-The code includes:
-- **Data loading** with COCO annotations using `torchvision.datasets.CocoDetection`.  
-- **Custom Focal Loss** implemented from scratch.  
-- **Backbone** based on ResNet-50.  
-- **Feature Pyramid Network (FPN)** for multi-scale feature representation.  
-- **Subnets** for classification and box regression.  
-- Training and evaluation functions with `tqdm` progress bars.  
-
-## 🚧 Limitations
-Due to the computational cost of training RetinaNet on COCO, I was unable to finish a full training run on my laptop. This work demonstrates the methodology and implementation, which can be executed successfully in a GPU server or cloud environment.  
 ---
+
+## Introduction  
+Traditional one-stage detectors (e.g., SSD, YOLO) suffer from lower accuracy compared to two-stage detectors (e.g., Faster R-CNN) due to the extreme class imbalance: the number of background (easy negative) anchors dominates the relatively few foreground samples.  
+
+The **Focal Loss** addresses this by modifying the standard cross-entropy loss:  
+
+$$
+FL(p_t) = - \alpha_t (1 - p_t)^\gamma \log(p_t)
+$$
+
+- **α**: balancing factor between positive/negative examples.  
+- **γ**: focusing parameter, reducing the loss for well-classified examples.  
+- As a result, the model emphasizes hard, misclassified examples during training.  
+
+The **RetinaNet** architecture combines a **ResNet backbone with Feature Pyramid Networks (FPNs)** and dense prediction subnetworks for classification and bounding box regression.  
+
+---
+
+## Implementation  
+
+### Dataset  
+- **COCO 2017** dataset.  
+- Used **train2017** for training and **val2017** for validation.  
+- Implemented dataset loading with **`torchvision.datasets.CocoDetection`**.  
+- Applied preprocessing: normalization with ImageNet means/stds.  
+
+### Custom Focal Loss  
+I implemented the focal loss in PyTorch, with tunable **α** and **γ** parameters. This function replaces binary cross-entropy for classification loss in dense detection.  
+
+### Model Components  
+1. **Backbone**: ResNet50 pretrained on ImageNet.  
+2. **Feature Pyramid Network (FPN)**: Generates multi-scale feature maps (P3–P7).  
+3. **Subnetworks**:  
+   - **Classification head** with focal loss.  
+   - **Regression head** for bounding box offsets.  
+4. **Final Detector**: RetinaNet, built on top of backbone + FPN + subnets.  
+
+### Training & Evaluation  
+- Optimizer: **Adam**, learning rate = 1e-4.  
+- Epochs: 10 (planned).  
+- Batch size: 4.  
+- Logging: progress tracked with **tqdm**.  
+- Evaluation included per-batch predictions and cumulative loss tracking.  
+
+---
+
+## Results & Limitations  
+- Due to **hardware constraints** (running on a local laptop and Kaggle kernels with limited resources), full training on the COCO dataset was **not computationally feasible**.  
+- The experiment was **interrupted mid-training**, as the required GPU hours exceeded the available resources.  
+- Nevertheless, the implementation demonstrates how focal loss integrates into RetinaNet and how COCO preprocessing, training loops, and evaluation are structured.  
+
+---
+
+## Conclusion  
+This project highlights how **Focal Loss improves dense object detection** by addressing the imbalance problem in one-stage detectors. While I was not able to train RetinaNet fully due to server and computational limitations, the implementation faithfully follows the paper’s methodology and can be extended on more powerful hardware.  
+
+Future improvements:  
+- Training on distributed GPU clusters.  
+- Hyperparameter tuning for focal loss (α, γ).  
+- Comparing RetinaNet + Focal Loss with baseline detectors (SSD, Faster R-CNN).  
+
+---
+
+## Reference  
+Lin, T.-Y., Goyal, P., Girshick, R., He, K., & Dollár, P. (2017).  
+**Focal Loss for Dense Object Detection.** ICCV 2017.  
+[https://arxiv.org/abs/1708.02002](https://arxiv.org/abs/1708.02002)
